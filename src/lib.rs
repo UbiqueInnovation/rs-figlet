@@ -72,7 +72,7 @@ impl FIGfont {
             width -= 1;
         }
 
-        Ok(line[..width].replace(hardblank, " ").to_string())
+        Ok(line[..width].replace(hardblank, " "))
     }
 
     fn extract_one_font(
@@ -214,7 +214,7 @@ impl FIGfont {
             return Err("can not generate FIGlet font from empty string".to_string());
         }
 
-        let header_line = FIGfont::read_header_line(&lines.get(0).unwrap())?;
+        let header_line = FIGfont::read_header_line(lines.get(0).unwrap())?;
         let comments = FIGfont::read_comments(&lines, header_line.comment_lines)?;
         let fonts = FIGfont::read_fonts(&lines, &header_line)?;
 
@@ -223,6 +223,15 @@ impl FIGfont {
             comments,
             fonts,
         })
+    }
+
+    /// generate FIGlet font from font database
+    
+    pub fn from_font_name(name: &str) -> Result<FIGfont, Box<dyn std::error::Error>> {
+        const BASE_URL : &str = "http://www.figlet.org/fonts";
+        let font = ureq::get(&format!("{}/{}", BASE_URL, name)).call()?.into_string()?;
+        let font = Self::from_content(&font)?;
+        Ok(font)
     }
 
     /// generate FIGlet font from specified file
@@ -234,9 +243,9 @@ impl FIGfont {
     /// the standard FIGlet font, which you can find [`fontdb`]
     ///
     /// [`fontdb`]: http://www.figlet.org/fontdb.cgi
-    pub fn standand() -> Result<FIGfont, String> {
+    pub fn standard() -> Result<FIGfont, Box<dyn std::error::Error>> {
         let contents = std::include_str!("standard.flf");
-        FIGfont::from_content(contents)
+        Ok(FIGfont::from_content(contents)?)
     }
 
     /// convert string literal to FIGure
@@ -335,7 +344,7 @@ impl HeaderLine {
         }
 
         let signature_with_hardblank =
-            HeaderLine::extract_signature_with_hardblank(&infos.get(0).unwrap())?;
+            HeaderLine::extract_signature_with_hardblank(infos.get(0).unwrap())?;
 
         let height = HeaderLine::extract_required_info(&infos, 1, "height")?;
         let baseline = HeaderLine::extract_required_info(&infos, 2, "baseline")?;
@@ -436,7 +445,7 @@ mod tests {
 
     #[test]
     fn test_new_figfont() {
-        let font = FIGfont::standand();
+        let font = FIGfont::standard();
         assert!(font.is_ok());
         let font = font.unwrap();
 
@@ -487,7 +496,7 @@ of new full-width/kern/smush alternatives, but default output is NOT changed.",
 
     #[test]
     fn test_convert() {
-        let standard_font = FIGfont::standand();
+        let standard_font = FIGfont::standard();
         assert!(standard_font.is_ok());
         let standard_font = standard_font.unwrap();
 
