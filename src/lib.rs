@@ -228,7 +228,7 @@ impl FIGfont {
     /// generate FIGlet font from font database
     
     pub fn from_font_name(name: &str) -> Result<FIGfont, Box<dyn std::error::Error>> {
-        const BASE_URL : &str = "http://www.figlet.org/fonts";
+        const BASE_URL : &str = "https://raw.githubusercontent.com/xero/figlet-fonts/master";
         let font = ureq::get(&format!("{}/{}.flf", BASE_URL, name)).call()?.into_string()?;
         let font = Self::from_content(&font)?;
         Ok(font)
