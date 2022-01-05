@@ -229,7 +229,7 @@ impl FIGfont {
     
     pub fn from_font_name(name: &str) -> Result<FIGfont, Box<dyn std::error::Error>> {
         const BASE_URL : &str = "http://www.figlet.org/fonts";
-        let font = ureq::get(&format!("{}/{}", BASE_URL, name)).call()?.into_string()?;
+        let font = ureq::get(&format!("{}/{}.flf", BASE_URL, name)).call()?.into_string()?;
         let font = Self::from_content(&font)?;
         Ok(font)
     }
